@@ -19,4 +19,4 @@ storiesOf('Button', module)
   ));
 
 storiesOf("Calendar", module)
-  .add("view", () => <Calendar/>)
+    .add("view", () => <Calendar/>  );
