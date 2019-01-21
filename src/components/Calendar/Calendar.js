@@ -31,7 +31,9 @@ class Calendar extends Component {
     }
 
     setShowing() {
-        this.setState({showMonth: !this.state.showMonth})
+        this.setState({showMonth: !this.state.showMonth,
+        weekstart: (this.state.showMonth ? this.state.weekstart.clone().startOf("week") : this.state.weekstart.clone().startOf("month")),
+            weekend: this.state.showMonth ? this.state.weekstart.clone().endOf("week") : this.state.weekstart.clone().endOf("month")})
     }
 
     renderList() {
@@ -94,8 +96,8 @@ class Calendar extends Component {
     today() {
         const prop = this.state.showMonth ? "month" : "week";
         this.setState({
-            weekend: moment().startOf(prop),
-            weekstart: moment().endOf(prop),
+            weekend: moment().endOf(prop),
+            weekstart: moment().startOf(prop),
         });
     }
 
@@ -108,7 +110,6 @@ class Calendar extends Component {
     }
 
     static getWeeks(weekstart) {
-        console.log("dada");
         const monthstart = moment(weekstart).startOf("month");
         const monthend = moment(weekstart).endOf("month");
         const weeks = [];
@@ -119,7 +120,6 @@ class Calendar extends Component {
                  weekend: moment(currentWeek).endOf("week"),
                  month: moment(monthstart).format("MM"),
              };
-             console.log(week);
              weeks.push(week);
              currentWeek.add(1, "week");
          }
@@ -127,6 +127,7 @@ class Calendar extends Component {
     }
 
     renderWeeks() {
+        console.log(this.state.weekstart, this.state.weekend);
         if (!this.state.showMonth) {
             return (
                 <div className="numbers">
