@@ -13,42 +13,52 @@ class Calendar extends Component {
             weekend: weekend,
             selectedDay: moment(),
             showMonth: false,
+            month: 0,
+            showButtons: true
         };
-        this.setShowing = this.setShowing.bind(this);
+        this.showWeek = this.showWeek.bind(this);
+        this.showMonth = this.showMonth.bind(this);
         this.today = this.today.bind(this);
         this.nextWeek = this.nextWeek.bind(this);
         this.prevWeek = this.prevWeek.bind(this);
         this.renderNumbers = this.renderNumbers.bind(this);
+        this.arrowClick = this.arrowClick.bind(this);
     }
 
 
     renderDate() {
         return (
-            <p className="position">{!this.state.showMonth ?
-                (`${moment(this.state.weekstart).format("ll")} - ${moment(this.state.weekend).format("ll")}`) :
-                (moment(this.state.weekstart).format("MMM, YYYY"))}</p>
+            <p className="position">{
+                (`${moment(this.state.weekstart).format("MMM D")} - ${moment(this.state.weekend).format("MMM D")}`)}</p>
         );
     }
 
-    setShowing() {
-        this.setState({showMonth: !this.state.showMonth,
-        weekstart: (this.state.showMonth ? this.state.weekstart.clone().startOf("week") : this.state.weekstart.clone().startOf("month")),
-            weekend: this.state.showMonth ? this.state.weekstart.clone().endOf("week") : this.state.weekstart.clone().endOf("month")})
+    showWeek() {
+        this.setState({
+            showMonth: false,
+            showButtons: false,
+            weekstart: this.state.weekstart.clone().startOf("week"),
+            weekend: this.state.weekstart.clone().endOf("week")
+        })
+    }
+
+    showMonth() {
+        this.setState({
+            showMonth: true,
+            showButtons: false,
+            weekstart: this.state.weekstart.clone().startOf("month"),
+            weekend: this.state.weekstart.clone().endOf("month")
+        })
+    }
+
+    arrowClick() {
+        this.setState({showButtons: !this.state.showButtons})
     }
 
     renderList() {
-        return(
-          <div className={"list"}>
-              <div className={"arrow"}>
-                  ▼
-              </div>
-              <div className={"listItem"} onClick={this.today}>
-                  Today
-              </div>
-              <div className={"listItem"} onClick={this.setShowing}>
-                  Show Weeks/Months
-              </div>
-          </div>
+        return (
+            <div className={this.state.showButtons ? "arrow-up" : "arrow"} onClick={this.arrowClick}>
+            </div>
         );
     }
 
@@ -71,13 +81,17 @@ class Calendar extends Component {
     renderNumbers(weekstart, weekend, month) {
         return (
             Calendar.getDays(weekstart, weekend).map(item => (
-                <div style={(item.format("YYYYMMDD") === this.state.selectedDay.format("YYYYMMDD")) ?
-                    {backgroundColor: "#0B3157", borderRadius: "7px"} : {}
-                }>
-                    <p onClick={(e) => this.selectDay(e)} className={"number"} id={item.format("YYYY-MM-DD")}
+                <div className={"number"}
+                     style={(item.format("YYYYMMDD") === this.state.selectedDay.format("YYYYMMDD")) ?
+                         {backgroundColor: "#0B3157", borderRadius: "7px"} : {}
+                     }>
+                    <p onClick={(e) => this.selectDay(e)} id={item.format("YYYY-MM-DD")}
                        style={item.format("YYYYMMDD") === moment().format("YYYYMMDD") ?
-                           {color: "red"} : item.format("MM") !== month ?
-                               {color: "#CCCCCC"} : {color: "#858585"}
+                           {color: "#f06543"} :
+                           (item.format("YYYYMMDD") === this.state.selectedDay.format("YYYYMMDD")) ?
+                               {color: "white"} : month === 0 ?
+                               {color: "#0B3157"} : item.format("MM") !== month ?
+                                   {color: "#CCCCCC"} : {color: "#0B3157"}
                        }>
                         {item.format("DD")}</p>
                 </div>
@@ -98,6 +112,7 @@ class Calendar extends Component {
         this.setState({
             weekend: moment().endOf(prop),
             weekstart: moment().startOf(prop),
+            showButtons: false,
         });
     }
 
@@ -114,20 +129,19 @@ class Calendar extends Component {
         const monthend = moment(weekstart).endOf("month");
         const weeks = [];
         const currentWeek = monthstart.clone().startOf("week");
-         while (!moment(monthend).isBefore(currentWeek)) {
-             const week = {
-                 weekstart: moment(currentWeek),
-                 weekend: moment(currentWeek).endOf("week"),
-                 month: moment(monthstart).format("MM"),
-             };
-             weeks.push(week);
-             currentWeek.add(1, "week");
-         }
+        while (!moment(monthend).isBefore(currentWeek)) {
+            const week = {
+                weekstart: moment(currentWeek),
+                weekend: moment(currentWeek).endOf("week"),
+                month: moment(monthstart).format("MM"),
+            };
+            weeks.push(week);
+            currentWeek.add(1, "week");
+        }
         return weeks;
     }
 
     renderWeeks() {
-        console.log(this.state.weekstart, this.state.weekend);
         if (!this.state.showMonth) {
             return (
                 <div className="numbers">
@@ -150,13 +164,30 @@ class Calendar extends Component {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet"/>
-                <div className="header">
-                    <p className="prev" onClick={this.prevWeek  }>PREV</p>
-                    <div className={"middle"}>
-                        {this.renderDate()}
-                        {this.renderList()}
+                <div className="header" style={this.state.showButtons ? {height: "84px"} : {height: "40px"}}>
+                    <div className={"top"}><p className="prev" onClick={this.prevWeek}>PREV</p>
+                        <div className={"middle"}>
+                            {this.renderDate()}
+                            {this.renderList()}
+                        </div>
+                        <p className="next" onClick={this.nextWeek}>NEXT</p>
                     </div>
-                    <p className="next" onClick={this.nextWeek}>NEXT</p>
+                    <div className={"buttons"} style={this.state.showButtons ?
+                        {display: "flex", marginTop: "0px"} : {display: "none", marginTop: "-40px"}}>
+                        <div className={"button"} onClick={this.today}>
+                            <span>Today</span>
+                        </div>
+                        <div className={"button"} onClick={this.showWeek}>
+                            <span>
+                                This week
+                            </span>
+                        </div>
+                        <div className={"button"} onClick={this.showMonth}>
+                            <span>
+                                This month
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 <div className="days">
                     <p>S</p>
